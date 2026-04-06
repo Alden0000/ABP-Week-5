@@ -1,92 +1,67 @@
-\<div align="center"\>
+<div align="center">
 
 # LAPORAN PRAKTIKUM
+# APLIKASI BERBASIS PLATFORM
+## COTS 2
 
-# APLIKASI BERBASIS PLATFORM[cite: 3]
-
-## COTS 2[cite: 3]
-
-\<img src="Assets/logotelu.jpeg" alt ="logo" width = "300"\>[cite: 3]
+<img src="assets/logotelu.jpeg" alt="logo" width="300">
 
 ### Disusun Oleh
+**Alden Audy Akbar**  
+**2311102309**  
+**IF-11-04**
 
-**Alden Audy Akbar**[cite: 3]  
-**2311102309**[cite: 3]  
-**IF-11-04**[cite: 3]
+---
 
 ### Dosen Pengampu
+**Cahyo Prihantoro, S.Kom., M.Eng.**
 
-**Cahyo Prihantoro, S.Kom., M.Eng.**[cite: 3]
+### LABORATORIUM HIGH PERFORMANCE
+FAKULTAS INFORMATIKA  
+UNIVERSITAS TELKOM PURWOKERTO  
+2026
 
-### LABORATORIUM HIGH PERFORMANCE[cite: 3]
+</div>
 
-FAKULTAS INFORMATIKA[cite: 3]  
-UNIVERSITAS TELKOM PURWOKERTO[cite: 3]  
-2026[cite: 3]
+---
 
-\</div\>
+## 1. Dasar Teori
 
------
+> ### Aplikasi Web & Node.js
+> Aplikasi berbasis platform yang dikembangkan ini berjalan di atas **Node.js**, sebuah runtime JavaScript yang memungkinkan eksekusi kode di sisi server. Dengan menggunakan framework **Express.js**, proses pembuatan routing dan penanganan permintaan HTTP menjadi lebih efisien dan terstruktur.
 
-## 1\. Dasar Teori
+> ### CRUD & JSON
+> Sistem ini mengimplementasikan operasi **CRUD** (*Create, Read, Update, Delete*) untuk pengelolaan data mahasiswa. Data disimpan dalam format **JSON** (*JavaScript Object Notation*), yang merupakan format pertukaran data ringan dan mudah dibaca baik oleh manusia maupun mesin.
 
-### Aplikasi Web
+> ### DataTables & Validasi
+> Untuk meningkatkan pengalaman pengguna (UX), aplikasi ini menggunakan **DataTables** untuk tabel interaktif dan **jQuery Validation** untuk memastikan data yang diinput pengguna sudah sesuai aturan.
 
-Aplikasi web adalah perangkat lunak yang diakses melalui browser tanpa perlu instalasi lokal, berjalan di atas protokol HTTP/HTTPS dengan sisi *client-side* dan *server-side*[cite: 3].
+---
 
-### Framework Node.js + Express
+## 2. Struktur Folder Proyek
 
-Node.js adalah *runtime* JavaScript di sisi server yang menggunakan model *event-driven*[cite: 3]. Express.js adalah framework minimalis untuk mempermudah pengelolaan routing dan middleware[cite: 3].
+> Berikut adalah susunan file dan folder dalam proyek **WHITEKNIGHT-SYSTEM**:
 
-### CRUD (Create, Read, Update, Delete)
-
-Operasi dasar pengelolaan data yang dipetakan ke metode HTTP seperti POST, GET, PUT, dan DELETE[cite: 3].
-
-### DataTables & jQuery Validation
-
-DataTables digunakan untuk menampilkan tabel interaktif dengan fitur pencarian dan paginasi[cite: 3]. jQuery Validation digunakan untuk memastikan validasi form di sisi klien berjalan otomatis[cite: 3].
-
------
-
-## 2\. Struktur Folder Proyek
-
-````bash
-SIMAHASISWA/
-├── index.ejs          ← Frontend UI (Bootstrap + jQuery)
-├── server.js           ← Backend REST API (Node.js + Express)
-├── package.json        ← Konfigurasi dependencies
-├── data/
-│   └── members.json  ← Database JSON (Auto-generated)
-└── README.md
-```[cite: 3]
+```bash
+WHITEKNIGHT-SYSTEM/
+├── assets/             # File gambar (Logo, Screenshot)
+├── data/               # Penyimpanan database JSON (members.json)
+├── node_modules/       # Library dependencies (npm)
+├── public/             # File statis (CSS, JS, Images)
+├── views/              # Template tampilan (index.ejs)
+├── .gitignore          # Daftar file yang diabaikan Git
+├── package.json        # Konfigurasi proyek & dependencies
+├── server.js           # File utama backend (Express Server)
+└── README.md           # Dokumentasi proyek
+```
 
 ---
 
 ## 3. Kode Program
 
-### A. `package.json`
-Mendefinisikan metadata proyek dan daftar *dependencies* seperti `express`, `cors`, dan `uuid`[cite: 3].
+### A. Backend (`server.js`)
 
-```json
-{
-  "name": "whiteknight-system",
-  "version": "1.0.0",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
-  },
-  "dependencies": {
-    "body-parser": "^1.20.0",
-    "cors": "^2.8.5",
-    "ejs": "^3.1.8",
-    "express": "^4.18.2",
-    "uuid": "^9.0.0"
-  }
-}
-```[cite: 3]
-
-### B. `server.js` (Backend)
-Mengatur endpoint REST API untuk menangani operasi data pada file `members.json`[cite: 3].
+> File ini berfungsi sebagai server utama menggunakan **Express.js**. Di sini kita mengatur *routing* untuk API dan mengelola penyimpanan data ke file JSON.
 
 ```javascript
 const express = require('express');
@@ -97,79 +72,100 @@ const { v4: uuidv4 } = require('uuid');
 const app = express();
 const PORT = 3000;
 
-const DATA_DIR = path.join(__dirname, 'data');
-const DB_FILE = path.join(DATA_DIR, 'members.json');
-
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.set('view engine', 'ejs');
+app.use(express.static('public'));
 
-// Inisialisasi Database
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
-if (!fs.existsSync(DB_FILE)) fs.writeFileSync(DB_FILE, JSON.stringify([]));
+// Path Database
+const DB_FILE = path.join(__dirname, 'data', 'members.json');
 
-// Routes API
+// Route Utama
+app.get('/', (req, res) => {
+    res.render('index');
+});
+
+// API Get All Members
 app.get('/api/member', (req, res) => {
     const data = JSON.parse(fs.readFileSync(DB_FILE));
     res.json({ data });
 });
 
+// API Create Member
 app.post('/api/member', (req, res) => {
     const data = JSON.parse(fs.readFileSync(DB_FILE));
-    const newMember = { id: uuidv4(), ...req.body, joined_at: new Date().toISOString().split('T')[0] };
+    const newMember = { 
+        id: uuidv4(), 
+        ...req.body, 
+        joined_at: new Date().toISOString().split('T')[0] 
+    };
     data.push(newMember);
     fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
-    res.json({ success: true, member: newMember });
+    res.json({ success: true });
 });
 
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
-```[cite: 3]
+app.listen(PORT, () => console.log(`Server berjalan di http://localhost:${PORT}`));
+```
 
-### C. `index.ejs` (Frontend - Script & UI)
-Menggunakan DataTables untuk menampilkan data dan jQuery Validation untuk form[cite: 3].
+### B. Frontend (`views/index.ejs`)
+
+> Bagian ini menangani tampilan antarmuka pengguna, menggunakan Bootstrap 5 untuk desain, DataTables untuk tabel interaktif, dan jQuery Validation untuk validasi form.
 
 ```javascript
-// Inisialisasi DataTables
-function refreshTable() {
-    const data = loadData(); // Load dari localStorage atau API
-    $('#dataMahasiswa').DataTable({
-        data: data,
+$(document).ready(function() {
+    // Inisialisasi DataTables
+    $('#memberTable').DataTable({
+        ajax: '/api/member',
         columns: [
             { data: 'nim' },
             { data: 'nama' },
-            { data: 'status' },
-            {
+            { data: 'email' },
+            { data: 'joined_at' },
+            { 
                 data: 'id',
-                render: (id) => `<button onclick="editMahasiswa('${id}')">Edit</button>`
+                render: function(data) {
+                    return `<button class="btn btn-sm btn-danger">Hapus</button>`;
+                }
             }
         ]
     });
-}
 
-// Validasi Form
-$('#mahasiswaForm').validate({
-    rules: { nim: { required: true }, nama: { required: true } },
-    submitHandler: function() {
-        // Logika simpan data
-    }
+    // Validasi Form
+    $("#formMahasiswa").validate({
+        rules: {
+            nim: { required: true, minlength: 10 },
+            nama: { required: true },
+            email: { required: true, email: true }
+        },
+        submitHandler: function(form) {
+            // Logika AJAX Post ke /api/member
+        }
+    });
 });
-```[cite: 3]
+```
 
 ---
 
 ## 4. Cara Menjalankan Aplikasi
-1. Ekstrak file proyek dan buka di VS Code[cite: 3].
-2. Buka terminal dan jalankan `npm install`[cite: 3].
-3. Jalankan server dengan perintah `node server.js`[cite: 3].
-4. Akses di browser melalui `http://localhost:3000`[cite: 3].
+
+> 1. Pastikan **Node.js** sudah terinstal di laptop.
+> 2. Buka terminal di folder proyek (`WHITEKNIGHT-SYSTEM`).
+> 3. Jalankan perintah: `npm install`
+> 4. Jalankan server: `node server.js`
+> 5. Buka browser dan akses: [http://localhost:3000](http://localhost:3000)
 
 ---
 
-## 5. Kesimpulan
-Aplikasi **SiMahasiswa** berhasil mengimplementasikan fitur CRUD secara lengkap menggunakan integrasi Node.js, Express, dan jQuery[cite: 3]. Penggunaan DataTables mempermudah manajemen data dalam jumlah besar, sementara localStorage/JSON file memastikan persistensi data yang ringan[cite: 3].
+## 5. Hasil Pengujian (Screenshots)
 
----
+### A. Halaman Utama & DataTables
+<img src="./assets/sc1.png" width="600">
 
-## 6. Referensi & Link Gdrive
-* **Referensi**: Node.js Docs, Expressjs.com, Bootstrap Docs[cite: 3].
-* **Link Gdrive**: [Klik di sini untuk mengakses file](https://drive.google.com/drive/folders/1oOSQffoSW49_lcFSTZ1C25vm2YYmrc4Z?usp=sharing)[cite: 3].
-````
+### B. Form Tambah Data & Validasi
+<img src="./assets/sc2.png" width="600">
+
+### C. Notifikasi & Penyimpanan Data
+<img src="./assets/sc3.png" width="600">
+
+
+### Drive: https://drive.google.com/drive/folders/1hfP29NWbx5PyWpaoQ-F0dfrBgjGE9a9h?usp=sharing
